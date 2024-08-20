@@ -1,0 +1,121 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Player : MonoBehaviour
+{
+    private Animator animator;
+    public Rigidbody2D rb;
+    public int SpeedForce;
+    private float direction;
+
+    public bool isGrounded;
+    public Transform detectedGround;
+    public LayerMask whatIsGround;
+
+    public int extraJump = 1;
+
+    public int Damage = 1;
+    public bool isAttacking;
+
+    private Vector3 FacingRight;
+    private Vector3 FacingLeft;
+
+    //estados de animação
+    const string Idle = "Idle";
+    const string Running = "Running";
+    const string Jump = "Jump";
+    const string Attack_Melee = "Attack Melee";
+    const string Attack_Ranged = "Attack Ranged";
+    const string TakeDamage = "Take Damage";
+    const string DIE = "DIE";
+
+    private string currentAnimation = "";
+
+     void Start()
+    {
+        animator = GetComponent<Animator>();
+        FacingRight = transform.localScale;
+        FacingLeft = transform.localScale;
+        FacingLeft.x = FacingLeft.x * -1;
+        rb = GetComponent<Rigidbody2D>();
+
+        ChangeAnimation("Idle");
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        isGrounded = Physics2D.OverlapCircle(detectedGround.position,0.1f, whatIsGround);
+
+        // Sessão de pulos
+        if (Input.GetButtonDown("Jump") && isGrounded == true)
+        {
+            rb.velocity = Vector2.up * 3.5f;
+            ChangeAnimation("Jump");
+        }
+
+        if (Input.GetButtonDown("Jump") && isGrounded == false && extraJump == 1 )
+        {
+            rb.velocity = Vector2.up * 3.5f;
+            extraJump --;
+            ChangeAnimation("Jump");
+        }
+ 
+        if (isGrounded)
+        {
+            extraJump = 1;
+
+            direction = Input.GetAxis("Horizontal");
+
+        if (direction > 0 )
+        {
+            //Olhando para a direita
+            transform.localScale = FacingRight;
+        }
+
+                if (direction < 0 )
+        {
+            //Olhando para a esquerda
+            transform.localScale = FacingLeft;
+        }
+
+        if (direction != 0)
+        {
+            ChangeAnimation("Running");
+        }
+        else
+        {
+            ChangeAnimation("Idle");
+        }
+        }
+
+        rb.velocity = new Vector2 (direction * SpeedForce , rb.velocity.y);
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Damage = 1;
+            isAttacking = true;
+            ChangeAnimation("Attack_Melee");
+        }
+    }
+
+    private void ChangeAnimation(string animation, float crossfade = 0.2f)
+    {
+        if (currentAnimation != animation)
+        {
+            currentAnimation = animation;
+            animator.CrossFade (animation, crossfade);
+        }
+    }
+
+   /* private void Attacks ()
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Damage = 1;
+            isAttacking = true;
+            ChangeAnimation("Attack_Melee");
+        }
+    }*/
+}

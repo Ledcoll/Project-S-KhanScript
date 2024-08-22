@@ -1,0 +1,129 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Player : MonoBehaviour
+{
+    private Animator animator;
+    public Rigidbody2D rb;
+    public int SpeedForce;
+    private float direction;
+    
+
+    public bool isGrounded;
+    public Transform GroundSensor;
+    public LayerMask whatIsGround;
+    public float raioGround = 0.1f;
+
+    public int extraJump = 1;
+
+    public int Damage = 1;
+    public bool isAttacking = false;
+
+    private Vector3 FacingRight;
+    private Vector3 FacingLeft;
+
+    //estados de animação
+    const string Idle = "Idle";
+    const string Running = "Running";
+    const string Jump = "Jump";
+    const string AttackMelee = "Attack_Melee";
+    const string ATTACK_RANGED = "Attack_Ranged";
+    const string TakeDamage = "Take Damage";
+    const string DIE = "DIE";
+
+    private string currentAnimation = "";
+
+     void Start()
+    {
+        animator = GetComponent<Animator>();
+        FacingRight = transform.localScale;
+        FacingLeft = transform.localScale;
+        FacingLeft.x = FacingLeft.x * -1;
+        rb = GetComponent<Rigidbody2D>();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        isGrounded = Physics2D.OverlapCircle(GroundSensor.position, raioGround, whatIsGround);
+        
+        // Sessão de pulos
+        if (Input.GetButtonDown("Jump") && isGrounded == true)
+        {
+            rb.velocity = Vector2.up * 3.5f;
+            ChangeAnimation(Jump);
+        }
+
+        if (Input.GetButtonDown("Jump") && isGrounded == false && extraJump == 1 )
+        {
+            rb.velocity = Vector2.up * 3.5f;
+            extraJump --;
+            ChangeAnimation(Jump);
+        }
+ 
+        if (isGrounded)
+        {
+            extraJump = 1;
+
+            direction = Input.GetAxis("Horizontal");
+
+        if (direction > 0 )
+        {
+            //Olhando para a direita
+            transform.localScale = FacingRight;
+        }
+
+                if (direction < 0 )
+        {
+            //Olhando para a esquerda
+            transform.localScale = FacingLeft;
+        }
+
+        if (direction != 0)
+        {
+            ChangeAnimation(Running);
+        }
+        }
+        rb.velocity = new Vector2 (direction * SpeedForce , rb.velocity.y);
+
+        if (Input.GetButtonDown("Fire1") && !isAttacking)
+        {
+            Attacks();
+        }
+
+        // só vai muda para Idle se não tiver fazendo nada
+        if (isGrounded && direction == 0 )
+        {
+            ChangeAnimation(Idle);
+        }
+        else if (isGrounded)
+        {
+            ChangeAnimation(Running);
+        }
+    }
+
+ private void ChangeAnimation(string animation, float crossfade = 0.2f)
+{
+    if (animator == null) return;
+
+    if (currentAnimation != animation)
+    {
+        currentAnimation = animation;
+
+        if (animator.HasState(0, Animator.StringToHash(animation)))
+        {
+            animator.CrossFade(animation, crossfade);
+        }
+    }
+}
+
+private void Attacks()
+{
+    if (!isAttacking)
+    {
+    Damage = 1;
+    ChangeAnimation(AttackMelee);
+    }
+}
+}
